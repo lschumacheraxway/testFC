@@ -1,0 +1,153 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" xml:lang="en-us">
+    <head>
+        <link href="Resources/TableStyles/SynchTableStyle_noshade.css" rel="stylesheet" MadCap:stylesheetType="table" /><title></title>
+        <link href="Resources/Stylesheets/axway.css" rel="stylesheet" />
+    </head>
+    <body>
+        <h1>Integrate with Transfer CFT in container environments</h1>
+        <p>This page is intended to help you understand the various ways to use Transfer CFT&#160;and associated applications in a container environment, providing a high level overview of the possible integration architectures.</p>
+        <MadCap:pageBreak>&#160;</MadCap:pageBreak>
+        <MadCap:pageBreak>&#160;</MadCap:pageBreak>
+        <h2>Kubernetes concepts</h2>
+        <p class="bold_in_para"><a name="__RefHeading___Toc2635_2515630742"></a>Nodes</p>
+        <p>Kubernetes runs your workload by placing containers into Pods to run on Nodes. A node may be a virtual or physical machine, depending on the cluster. Each node contains the services necessary to run Pods, managed by the control plane.</p>
+        <p>Typically you have several nodes in a cluster; in a learning or resource-limited environment, you might have just one.</p>
+        <p class="bold_in_para"><a name="__RefHeading___Toc2637_2515630742"></a>Pods</p>
+        <p>Pods are the smallest deployable units of computing that you can create and manage in Kubernetes.</p>
+        <p>A Pod  is a group of one or more containers, with shared storage/network resources, and a specification for how to run the containers. A Pod's contents are always co-located and co-scheduled, and run in a shared context. A Pod models an application-specific "logical host": it contains one or more application containers that are relatively tightly coupled. In non-cloud contexts, applications executed on the same physical or virtual machine are analogous to cloud applications executed on the same logical host.</p>
+        <p>Definitions are provided by Kubernetes at: <a href="https://kubernetes.io/docs/concepts/">https://kubernetes.io/docs/concepts</a></p>
+        <h2><a name="__RefHeading___Toc2639_2515630742"></a>&#160; Producer/consumer application integration</h2>
+        <p>Your  producer/consumer application integration with Transfer CFT is based on:</p>
+        <ul>
+            <li>File storage: Where and how files transferred by Transfer CFT are shared with the application</li>
+            <li>Transfer triggering: How the application triggers a transfer request</li>
+            <li>Post-processing: How Transfer CFT handles post-processing</li>
+        </ul>
+        <h3><a name="__RefHeading___Toc2641_2515630742"></a>File storage</h3>
+        <p>There are 3 possible file storage implementations when you have Transfer CFT as a container along with a  producer/consumer application.</p>
+        <h4><a name="__RefHeading___Toc2643_2515630742"></a>1. <MadCap:variable name="suite_variables.TransferCFTName" /> is the application sidecar </h4>
+        <p>The application and <MadCap:variable name="suite_variables.TransferCFTName" /> run in the same pod but in different containers. Both the data produced/consumed by the application and <MadCap:variable name="suite_variables.TransferCFTName" /> reside on a persistent volume attached to a node where the pod is running.&#160;The persistent volume supports ReadWriteOnce access mode and is a local volume (AWS ESB, GCEPersistentDisk, AzureDisk).</p>
+        <p class="figureCaption">Sidecar architecture</p>
+        <p>
+            <img src="Resources/Images/integrate_transfer_cft_container/Integrate with Transfer CFT.png" />
+        </p>
+        <MadCap:pageBreak>&#160;</MadCap:pageBreak>
+        <h4>2. <MadCap:variable name="suite_variables.TransferCFTName" /> and the application run on different pods but on the same node </h4>
+        <p>The application and <MadCap:variable name="suite_variables.TransferCFTName" /> run on different pods on the same node. If using a local volume, both pods must run on the same node.&#160;Both the data produced and consumed by the application and <MadCap:variable name="suite_variables.TransferCFTName" /> reside on a persistent volume attached to the node where the pods are running. The persistent volume supports ReadWriteOnce access mode, and is a local volume (AWS ESB, GCEPersistentDisk, AzureDisk).</p>
+        <p class="figureCaption">Two pods one node architecture</p>
+        <p>
+            <img src="Resources/Images/integrate_transfer_cft_container/Integrate with Transfer CFT_1.png" />
+        </p>
+        <h4><a name="__RefHeading___Toc2647_2515630742"></a>3. <MadCap:variable name="suite_variables.TransferCFTName" /> and the application run on different nodes </h4>
+        <p>The application and <MadCap:variable name="suite_variables.TransferCFTName" /> run on different nodes.&#160;Both the data produced and consumed by the application and <MadCap:variable name="suite_variables.TransferCFTName" /> reside on a persistent volume that&#160;supports the ReadWriteMany access mode, and which can be a shared volume (Ceph, GlusterFS, NFS, ...) or cloud storage (AWS S3, GCS, Azure Blob Storage).</p>
+        <p class="figureCaption">Two pods two nodes architecture</p>
+        <p>
+            <img src="Resources/Images/integrate_transfer_cft_container/Integrate with Transfer CFT_2.png" />
+        </p>
+        <h4><a name="__RefHeading___Toc2649_2515630742"></a>&#160;Architecture versus file storage summary</h4>
+        <table class="TableStyle-SynchTableStyle_interop" cellspacing="0" style="width: 90%;mc-table-style: url('Resources/TableStyles/SynchTableStyle_noshade.css');">
+            <col class="TableStyle-SynchTableStyle_interop-Column-Column1" />
+            <col class="TableStyle-SynchTableStyle_interop-Column-Column1" />
+            <col class="TableStyle-SynchTableStyle_interop-Column-Column1" />
+            <col class="TableStyle-SynchTableStyle_interop-Column-Column1" />
+            <thead>
+                <tr class="TableStyle-SynchTableStyle_interop-Head-Header1">
+                    <th class="TableStyle-SynchTableStyle_interop-HeadE-Column1-Header1">
+                        <p>Architecture</p>
+                    </th>
+                    <th class="TableStyle-SynchTableStyle_interop-HeadE-Column1-Header1">
+                        <p>Local volume</p>
+                    </th>
+                    <th class="TableStyle-SynchTableStyle_interop-HeadE-Column1-Header1">
+                        <p>Shared volume</p>
+                    </th>
+                    <th class="TableStyle-SynchTableStyle_interop-HeadD-Column1-Header1">
+                        <p>Cloud storage</p>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="TableStyle-SynchTableStyle_interop-Body-Body2">
+                    <td class="TableStyle-SynchTableStyle_interop-BodyE-Column1-Body2">
+                        <p>1. Same pod</p>
+                    </td>
+                    <td class="TableStyle-SynchTableStyle_interop-BodyE-Column1-Body2">
+                        <p>yes</p>
+                    </td>
+                    <td class="TableStyle-SynchTableStyle_interop-BodyE-Column1-Body2">
+                        <p>yes</p>
+                    </td>
+                    <td class="TableStyle-SynchTableStyle_interop-BodyD-Column1-Body2">
+                        <p>yes</p>
+                    </td>
+                </tr>
+                <tr class="TableStyle-SynchTableStyle_interop-Body-Body2">
+                    <td class="TableStyle-SynchTableStyle_interop-BodyE-Column1-Body2">
+                        <p>2. Two pods on the same node</p>
+                    </td>
+                    <td class="TableStyle-SynchTableStyle_interop-BodyE-Column1-Body2">
+                        <p>yes</p>
+                    </td>
+                    <td class="TableStyle-SynchTableStyle_interop-BodyE-Column1-Body2">
+                        <p>yes</p>
+                    </td>
+                    <td class="TableStyle-SynchTableStyle_interop-BodyD-Column1-Body2">
+                        <p>yes</p>
+                    </td>
+                </tr>
+                <tr class="TableStyle-SynchTableStyle_interop-Body-Body2">
+                    <td class="TableStyle-SynchTableStyle_interop-BodyB-Column1-Body2">
+                        <p>3. Two pods regardless of the running node</p>
+                    </td>
+                    <td class="TableStyle-SynchTableStyle_interop-BodyB-Column1-Body2">
+                        <p>no</p>
+                    </td>
+                    <td class="TableStyle-SynchTableStyle_interop-BodyB-Column1-Body2">
+                        <p>yes</p>
+                    </td>
+                    <td class="TableStyle-SynchTableStyle_interop-BodyA-Column1-Body2">
+                        <p>yes</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h3><a name="__RefHeading___Toc2651_2515630742"></a>&#160;Transfer triggering</h3>
+        <p>In a standard environment, on bare metal, or virtual machines, an application can trigger transfers using the following methods:</p>
+        <ul>
+            <li>Batch mode (CFTUTIL)</li>
+            <li>REST API</li>
+            <li>Folder monitoring</li>
+        </ul>
+        <p> When using a container environment however, you cannot use batch mode since Transfer CFT is isolated in a container. Available methods include: </p>
+        <ul>
+            <li>REST API</li>
+            <li>Folder monitoring</li>
+        </ul>
+        <p class="figureCaption">Application invokes Transfer CFT REST APIs</p>
+        <p>
+            <img src="Resources/Images/integrate_transfer_cft_container/Integrate with Transfer CFT_3.png" />
+        </p>
+        <p class="figureCaption">Folder monitoring</p>
+        <p>
+            <img src="Resources/Images/integrate_transfer_cft_container/Integrate with Transfer CFT_4.png" />
+        </p>
+        <MadCap:pageBreak>&#160;</MadCap:pageBreak>
+        <h3><a name="__RefHeading___Toc2653_2515630742"></a>&#160;Post-processing</h3>
+        <p>The application and Transfer CFT run in different containers, so inside a post-processing Transfer CFT cannot invoke batch and command line utility provided by the application. Transfer CFT can interact with the application by:</p>
+        <ul>
+            <li>Invoking the application’s REST API using the curl command inside the post-processing script</li>
+            <li>Invoking a Kubernetes job using the Kubernetes API from inside the container</li>
+            <li>Storing a file in a directory monitored by the application</li>
+        </ul>
+        <p class="bold_in_para">Transfer CFT notifies the application using REST API</p>
+        <p>
+            <img src="Resources/Images/integrate_transfer_cft_container/Integrate with Transfer CFT_5.png" />
+        </p>
+        <p>&#160;</p>
+        <p class="figureCaption">The application monitors a directory</p>
+        <p>
+            <img src="Resources/Images/integrate_transfer_cft_container/Integrate with Transfer CFT_6.png" />
+        </p>
+    </body>
+</html>
